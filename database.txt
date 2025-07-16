@@ -1,0 +1,65 @@
+create table if not exists users (
+  id uuid primary key default gen_random_uuid(),
+  username text not null,
+  email text not null,
+  password_hash text not null,
+  role text default 'user',
+  badges text[],
+  level int default 1,
+  xp int default 0,
+  avatar text,
+  solved_problems int default 0,
+  total_submissions int default 0,
+  streak int default 0,
+  contests_participated int default 0,
+  ranking int default 0,
+  last_login timestamp,
+  created_at timestamp default now(),
+  updated_at timestamp default now()
+);
+
+alter table users add constraint unique_email unique(email);
+alter table users add constraint unique_username unique(username);
+
+CREATE TABLE problems (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  title TEXT NOT NULL,
+  slug TEXT NOT NULL UNIQUE,
+  difficulty TEXT CHECK (difficulty IN ('Easy', 'Medium', 'Hard')) NOT NULL,
+  description TEXT NOT NULL,
+  input_format TEXT,
+  output_format TEXT,
+  constraints TEXT,
+  tags TEXT, -- Store as JSON string
+  total_submissions INT DEFAULT 0,
+  accepted_submissions INT DEFAULT 0,
+  acceptance_rate FLOAT DEFAULT 0,
+  created_by uuid REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE test_cases (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  problem_id uuid REFERENCES problems(id) ON DELETE CASCADE,
+  input TEXT NOT NULL,
+  expected_output TEXT NOT NULL,
+  is_sample BOOLEAN DEFAULT false
+);
+CREATE TABLE submissions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  problem_id uuid REFERENCES problems(id) ON DELETE CASCADE,
+  code TEXT NOT NULL,
+  language TEXT NOT NULL,
+  status TEXT DEFAULT 'Pending',
+  runtime TEXT,
+  memory TEXT,
+  test_cases_passed INT DEFAULT 0,
+  total_test_cases INT DEFAULT 0,
+  submitted_at TIMESTAMP DEFAULT now()
+);
+CREATE TABLE user_solutions (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid REFERENCES users(id) ON DELETE CASCADE,
+  problem_id uuid REFERENCES problems(id) ON DELETE CASCADE,
+  solved_at TIMESTAMP DEFAULT now()
+);
