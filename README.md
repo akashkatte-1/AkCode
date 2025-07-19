@@ -2,6 +2,9 @@
 
 A comprehensive HackerRank-style coding platform built with React.js frontend and Node.js backend, featuring real-time code execution, user authentication, problem management, and competitive programming features.
 
+## To view project demo click below link
+- [https://www.loom.com/share/474bd75bf6ad4c21ab5ffc1778912e57?sid=700c6253-091f-4ed7-aa73-cca6585bb2ed]
+
 ## 🚀 Features
 
 ### Frontend (React.js)
@@ -106,8 +109,6 @@ A comprehensive HackerRank-style coding platform built with React.js frontend an
    ```bash
    npm start
    ```
-## To view project demo click below link
-- [https://www.loom.com/share/474bd75bf6ad4c21ab5ffc1778912e57?sid=700c6253-091f-4ed7-aa73-cca6585bb2ed]
 
 ## 🎯 Usage
 
