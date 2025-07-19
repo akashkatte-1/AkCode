@@ -106,6 +106,8 @@ A comprehensive HackerRank-style coding platform built with React.js frontend an
    ```bash
    npm start
    ```
+## To view project demo click below link
+- [https://www.loom.com/share/474bd75bf6ad4c21ab5ffc1778912e57?sid=700c6253-091f-4ed7-aa73-cca6585bb2ed]
 
 ## 🎯 Usage
 
@@ -229,23 +231,7 @@ codeplatform/
 4. Add tests if applicable
 5. Submit a pull request
 
-## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🙏 Acknowledgments
-
-- Inspired by HackerRank and LeetCode
-- Built with modern web technologies
-- Designed for educational purposes
-
-## 📞 Support
-
-For support and questions:
-- Create an issue on GitHub
-- Contact the development team
-- Check the documentation
-
----
 
 **Happy Coding! 🎉**
