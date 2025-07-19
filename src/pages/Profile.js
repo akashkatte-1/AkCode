@@ -16,21 +16,37 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { submissionsAPI } from '../services/api';
 
+
+
 const Profile = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [userSubmissions, setUserSubmissions] = useState([]);
   const [loadingSubmissions, setLoadingSubmissions] = useState(true);
+  const [currentStreak, setCurrentStreak] = useState(0); // Add streak state
 
   useEffect(() => {
     const fetchUserSubmissions = async () => {
       try {
         setLoadingSubmissions(true);
-        const response = await submissionsAPI.getUserSubmissions();
-        setUserSubmissions(response.data || []);
+        const response = await submissionsAPI.getUserSubmissions({
+          userId: user?.id
+        });
+        const submissions = Array.isArray(response?.data?.submissions) ? response.data.submissions : [];
+        setUserSubmissions(submissions);
+        
+        // Calculate streak from submissions
+        const streak = calculateCurrentStreak(submissions);
+        setCurrentStreak(streak);
+        
+        if (user) {
+          user.totalSubmissions = submissions.length;
+          user.solvedProblems = submissions.filter(s => s.status === 'Accepted').length;
+        }
       } catch (error) {
         console.error('Error fetching user submissions:', error);
         setUserSubmissions([]);
+        setCurrentStreak(0);
       } finally {
         setLoadingSubmissions(false);
       }
@@ -42,7 +58,8 @@ const Profile = () => {
   }, [user?.id]);
 
   const submissions = Array.isArray(userSubmissions) ? userSubmissions : [];
-  const acceptedSubmissions = submissions.filter(sub => sub.status === 'Accepted');
+  const acceptedSubmissions = submissions.filter(sub => sub?.status === 'Accepted');
+// ... rest of the code ...
 
   const tabs = [
     { id: 'overview', label: 'Overview', icon: User },
@@ -50,29 +67,56 @@ const Profile = () => {
     { id: 'achievements', label: 'Achievements', icon: Trophy },
     { id: 'activity', label: 'Activity', icon: TrendingUp }
   ];
+  const calculateCurrentStreak = (submissions) => {
+    const acceptedDates = submissions
+      .filter(s => s.status === 'Accepted')
+      .map(s => new Date(s.submittedAt).toDateString());
+    
+    // Sort and remove duplicates
+    const uniqueDates = [...new Set(acceptedDates)].sort();
+    
+    // Calculate streak logic here
+    let streak = 0;
+    let prevDate = new Date();
+    
+    for (let i = uniqueDates.length - 1; i >= 0; i--) {
+      const currentDate = new Date(uniqueDates[i]);
+      const diffTime = prevDate - currentDate;
+      const diffDays = diffTime / (1000 * 60 * 60 * 24);
+      
+      if (diffDays <= 1) {
+        streak++;
+        prevDate = currentDate;
+      } else {
+        break;
+      }
+    }
+    
+    return streak;
+  };
 
   const stats = [
     { 
       label: 'Problems Solved', 
-      value: user.solvedProblems, 
+      value: acceptedSubmissions.length, 
       icon: Target,
       color: 'text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30'
     },
     { 
       label: 'Total Submissions', 
-      value: user.totalSubmissions, 
+      value: submissions.length, 
       icon: BookOpen,
       color: 'text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/30'
     },
     { 
       label: 'Current Streak', 
-      value: `${user.streak} days`, 
+      value: `${currentStreak} days`, 
       icon: TrendingUp,
       color: 'text-orange-600 dark:text-orange-400 bg-orange-100 dark:bg-orange-900/30'
     },
     { 
       label: 'Contest Rating', 
-      value: user.ranking, 
+      value: user?.contest_rating || 0, 
       icon: Medal,
       color: 'text-purple-600 dark:text-purple-400 bg-purple-100 dark:bg-purple-900/30'
     }
@@ -270,7 +314,7 @@ const Profile = () => {
                         }`}></div>
                         <div>
                           <p className="font-medium text-gray-900 dark:text-white">
-                            Problem #{submission.problemId}
+                          {submission.problem_title}
                           </p>
                           <p className="text-sm text-gray-500 dark:text-gray-400">
                             {submission.language} • {submission.submittedAt}

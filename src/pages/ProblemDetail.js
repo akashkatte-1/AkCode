@@ -20,6 +20,7 @@ import { problemsAPI, submissionsAPI } from '../services/api';
 import { codeTemplates } from '../data/mockData';
 import { useAuth } from '../contexts/AuthContext';
 
+
 const ProblemDetail = () => {
   const { slug } = useParams();
   const { user, isAuthenticated } = useAuth();
@@ -32,6 +33,8 @@ const ProblemDetail = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionResult, setSubmissionResult] = useState(null);
   const [userSubmissions, setUserSubmissions] = useState([]);
+  const [initialCode, setInitialCode] = useState('');
+  const [language, setLanguage] = useState('javascript');
 
   useEffect(() => {
     const fetchProblem = async () => {
@@ -45,6 +48,11 @@ const ProblemDetail = () => {
         if (problemData.testCases && problemData.testCases.length > 0) {
           const sampleTestCase = problemData.testCases.find(tc => tc.is_sample) || problemData.testCases[0];
           setTestInput(sampleTestCase.input);
+        }
+
+        // Set initial code template based on language
+        if (codeTemplates[language]) {
+          setInitialCode(codeTemplates[language]);
         }
 
         // Fetch user submissions for this problem if authenticated
@@ -62,8 +70,7 @@ const ProblemDetail = () => {
     if (slug) {
       fetchProblem();
     }
-  }, [slug, isAuthenticated]);
-
+  }, [slug, isAuthenticated, language]);
   const fetchUserSubmissions = async (problemId) => {
     try {
       const response = await submissionsAPI.getUserSubmissions({ problemId, limit: 10 });
@@ -78,32 +85,34 @@ const ProblemDetail = () => {
       toast.error('Please log in to run code');
       return;
     }
-
     if (!code.trim()) {
       toast.error('Please write some code before running');
       return;
     }
-
+  
     setIsRunning(true);
     setTestOutput('');
-    
+  
     try {
-      const response = await submissionsAPI.run({
+      const { data } = await submissionsAPI.run({
         code,
         language,
-        input: testInput
+        problemId: problem.id,
+        onlySamples: true
       });
-      
-      setTestOutput(response.data.result.output);
+  
+      const output = data.result.output?.trim() || '[No Output]';
+      setTestOutput(output);
       toast.success('Code executed successfully!');
     } catch (error) {
-      const message = error.response?.data?.error || 'Error executing code';
-      toast.error(message);
-      setTestOutput(`Error: ${message}`);
+      const msg = error.response?.data?.error || 'Error executing code';
+      toast.error(msg);
+      setTestOutput(`Error: ${msg}`);
     } finally {
       setIsRunning(false);
     }
   };
+  
 
   const handleSubmitCode = async (code, language) => {
     if (!isAuthenticated) {
@@ -456,14 +465,16 @@ const ProblemDetail = () => {
               transition={{ delay: 0.2 }}
             >
               <CodeEditor
-                onRunCode={handleRunCode}
-                onSubmitCode={handleSubmitCode}
-                isRunning={isRunning}
-                isSubmitting={isSubmitting}
-                initialCode={codeTemplates.javascript}
-                language="javascript"
-                problem={problem}
-              />
+  onRunCode={handleRunCode}
+  onSubmitCode={handleSubmitCode}
+  isRunning={isRunning}
+  isSubmitting={isSubmitting}
+  initialCode={initialCode}
+  language={language}
+  problem={problem}
+  submissionResult={submissionResult} // <-- required for per-test-case result
+/>
+
             </motion.div>
 
             {/* Test Input/Output */}
